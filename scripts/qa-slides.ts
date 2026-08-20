@@ -18,7 +18,7 @@ await page.evaluate(() => document.fonts.ready);
 const count = await page.$$eval(".slide", (els) => els.length);
 console.log("slides", count);
 
-for (const n of [1, 2, 5, 7, 10, 15, 20, 23, 28]) {
+for (const n of [1, 2, 3, 5, 6, 8, 11, 15, 18]) {
   await page.goto(`http://127.0.0.1:3000#${n}`, { waitUntil: "networkidle0" });
   await page.reload({ waitUntil: "networkidle0" });
   await page.evaluate(() => document.fonts.ready);
