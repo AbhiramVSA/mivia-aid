@@ -1,7 +1,6 @@
 import {
   CONFIG,
   DATASET,
-  FULL_EVAL,
   INFERENCE_STEPS,
   PAPER,
   PROXY_VS_FULL,
@@ -17,6 +16,68 @@ function Head({ kicker, title }: { kicker: string; title: string }) {
       <div className="kicker">{kicker}</div>
       <h2>{title}</h2>
     </>
+  );
+}
+
+function Corridor({ hero = false }: { hero?: boolean }) {
+  return (
+    <div className={hero ? "corridor corridor-hero" : "corridor"} aria-hidden="true">
+      <div className="corridor-band" />
+      <div className="corridor-axis" />
+      <div className="corridor-g" />
+      <span className="corridor-lab" style={{ left: "1rem", top: "0.5rem", color: "var(--onset)" }}>
+        g · annotated onset
+      </span>
+      <span className="corridor-lab" style={{ left: "1rem", bottom: "0.45rem" }}>0 s</span>
+      <span className="corridor-lab" style={{ left: "14%", bottom: "0.45rem", color: "var(--accept)" }}>g − 1 s</span>
+      <span className="corridor-lab" style={{ right: "1.2rem", bottom: "0.45rem", color: "var(--accept)" }}>
+        g + 30 s · accepted corridor
+      </span>
+    </div>
+  );
+}
+
+function StageStrip() {
+  return (
+    <div className="stages">
+      <article className="stage fill-c">
+        <div className="n">Stage 1</div>
+        <h3>VideoMAE</h3>
+        <p>Adapt the clip encoder with cumulative labels, then cache 768-d embeddings.</p>
+      </article>
+      <div className="stage-arrow" aria-hidden="true">→</div>
+      <article className="stage fill-d">
+        <div className="n">Stage 2</div>
+        <h3>Dilated Conv1D</h3>
+        <p>Train a temporal head on windows of 12 clips. Search stays on the cache.</p>
+      </article>
+      <div className="stage-arrow" aria-hidden="true">→</div>
+      <article className="stage fill-b">
+        <div className="n">Decode</div>
+        <h3>Full-video</h3>
+        <p>Average overlapping windows, then apply a recall-constrained threshold tuple.</p>
+      </article>
+    </div>
+  );
+}
+
+function ScoreCurve() {
+  const heights = [10, 11, 12, 13, 16, 22, 38, 62, 82, 91, 95, 97, 98, 98];
+  return (
+    <div className="score" aria-hidden="true">
+      {heights.map((h, i) => (
+        <div className="score-bar" key={i} style={{ height: `${h}%` }} />
+      ))}
+      <span className="score-lab" style={{ left: "1rem", top: "0.45rem", color: "var(--onset)" }}>
+        τstart = 0.70
+      </span>
+      <span className="score-lab" style={{ left: "1rem", bottom: "28%", color: "var(--clip)" }}>
+        τempty = 0.20
+      </span>
+      <span className="score-lab" style={{ right: "1rem", bottom: "0.4rem" }}>
+        averaged step probability over the video
+      </span>
+    </div>
   );
 }
 
@@ -75,43 +136,25 @@ export function getSlides(): Slide[] {
       node: (
         <>
           <div className="kicker">Surveillance video · accident-onset estimation · development-set protocol</div>
-          <div className="split">
-            <div>
-              <h1>{PAPER.shortTitle} on MIVIA-AID</h1>
-              <p className="lede" style={{ marginTop: "0.85rem" }}>
-                Adapt VideoMAE with clip-level cumulative supervision, train a dilated
-                temporal head on cached embeddings, and decode a timestamp only after
-                full-video aggregation.
-              </p>
-              <div className="authors">
-                {PAPER.authors.map((a) => (
-                  <div key={a.name}>{a.name}</div>
-                ))}
-              </div>
-              <div className="chips">
-                <span className="chip">VideoMAE-base</span>
-                <span className="chip">Dilated Conv1D</span>
-                <span className="chip">Offline, not streaming</span>
-                <span className="chip">Recall floor 0.90</span>
-              </div>
-            </div>
-            <article className="box compact">
-              <h3>Talk map</h3>
-              <ol>
-                <li>Problem, metric, and why this is not anticipation</li>
-                <li>Two-stage pipeline and the I/O bottleneck</li>
-                <li>Cumulative targets vs onset spikes</li>
-                <li>Dilated head, loss, and threshold decoder</li>
-                <li>Cached search vs full aid-eval</li>
-                <li>Why RGB-only is the selected checkpoint</li>
-              </ol>
-              <p style={{ marginTop: "0.7rem" }}>
-                Index terms: accident onset detection, video understanding, VideoMAE,
-                temporal convolution, metric-aware model selection, surveillance video.
-              </p>
-            </article>
+          <h1>{PAPER.shortTitle} on MIVIA-AID</h1>
+          <p className="lede" style={{ marginTop: "0.75rem" }}>
+            Adapt VideoMAE with clip-level cumulative supervision, train a dilated
+            temporal head on cached embeddings, and decode a timestamp only after
+            full-video aggregation.
+          </p>
+          <div className="authors">
+            {PAPER.authors.map((a) => (
+              <div key={a.name}>{a.name}</div>
+            ))}
           </div>
-          <div className="metrics" style={{ marginTop: "1rem", maxWidth: "none" }}>
+          <div className="chips">
+            <span className="chip">VideoMAE-base</span>
+            <span className="chip">Dilated Conv1D</span>
+            <span className="chip">Offline, not streaming</span>
+            <span className="chip">Recall floor 0.90</span>
+          </div>
+          <Corridor hero />
+          <div className="metrics" style={{ marginTop: "0.85rem", maxWidth: "none" }}>
             <div className="metric">
               <div className="lbl">Precision</div>
               <div className="val">{PAPER.metrics.precision.toFixed(4)}</div>
@@ -134,43 +177,29 @@ export function getSlides(): Slide[] {
       node: (
         <>
           <Head kicker="00" title="What was built, and which checkpoint was kept" />
-          <div className="split">
-            <div className="copy compact">
-              <p>
-                A two-stage pipeline for offline accident-onset timestamp estimation on
-                the MIVIA-AID validation split. Stage 1 adapts a pretrained VideoMAE
-                clip encoder with clip-level cumulative supervision. Stage 2 trains a
-                temporal model on per-clip embeddings, using a cached-feature path so
-                architecture and threshold sweeps remain feasible under heavy video I/O.
-              </p>
-              <p>
-                The selected model is RGB-only: a three-layer dilated Conv1D head,
-                cumulative step targets, auxiliary video-level supervision, monotonic
-                regularization, and recall-constrained threshold selection.
-              </p>
-              <p>
-                Motion fusion improved some cached-search runs, then lost under
-                end-to-end evaluation. Final selection therefore used the full aid-eval
-                protocol, not training-loop F1.
-              </p>
-            </div>
-            <div className="compact" style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-              <article className="box">
-                <h3>Selected recipe</h3>
-                <ul>
-                  <li>Cumulative targets, not onset spikes</li>
-                  <li>Conv1D 512/512/256, dilations 1/2/4</li>
-                  <li>Windows 12 / stride 6, seed 2026</li>
-                  <li>Recall floor 0.90 for operating-point search</li>
-                </ul>
-              </article>
-              <article className="box">
-                <h3>aid-eval numbers</h3>
-                <p>RGB-only: P 0.6643 · R 0.9324 · F1 0.7756</p>
-                <p>Motion fusion: P 0.6731 · R 0.7721 · F1 0.7192</p>
-                <p>Stage 1 clip baseline F1 0.6238</p>
-              </article>
-            </div>
+          <p className="lede" style={{ marginBottom: "0.75rem" }}>
+            A two-stage pipeline for offline accident-onset timestamp estimation on
+            the MIVIA-AID validation split. Motion fusion looked strong in cached
+            search, then lost under end-to-end evaluation — so the selected checkpoint
+            is RGB-only.
+          </p>
+          <StageStrip />
+          <div className="grid-2 compact" style={{ marginTop: "0.75rem" }}>
+            <article className="box">
+              <h3>Selected recipe</h3>
+              <ul>
+                <li>Cumulative targets, not onset spikes</li>
+                <li>Conv1D 512/512/256, dilations 1/2/4</li>
+                <li>Windows 12 / stride 6, seed 2026</li>
+                <li>Recall floor 0.90 for operating-point search</li>
+              </ul>
+            </article>
+            <article className="box">
+              <h3>aid-eval numbers</h3>
+              <p>RGB-only: P 0.6643 · R 0.9324 · F1 0.7756</p>
+              <p>Motion fusion: P 0.6731 · R 0.7721 · F1 0.7192</p>
+              <p>Stage 1 clip baseline F1 0.6238 — selection used full aid-eval, not training-loop F1.</p>
+            </article>
           </div>
         </>
       ),
@@ -186,24 +215,24 @@ export function getSlides(): Slide[] {
             These constraints shaped the system more than architectural novelty.
           </p>
           <div className="grid-3 compact">
-            <article className="box">
-              <h3>1. Long videos</h3>
+            <article className="box mark" data-n="01">
+              <h3>Long videos</h3>
               <p>
                 Raw Stage 2 was CPU- and I/O-bound: ~74 min/epoch, batch 1, 4020
                 batches, while GPU memory stayed at 1.4–1.6 GB. Decode, preprocess,
                 and dataloader contention dominated, not VRAM.
               </p>
             </article>
-            <article className="box">
-              <h3>2. Asymmetric metric</h3>
+            <article className="box mark" data-n="02">
+              <h3>Asymmetric metric</h3>
               <p>
                 A prediction is accepted on [g−1, g+30]. Missing predictions hurt
                 recall; mistimed positives hurt precision. Stable post-onset
                 declaration can beat sharp localization.
               </p>
             </article>
-            <article className="box">
-              <h3>3. Imbalanced train</h3>
+            <article className="box mark" data-n="03">
+              <h3>Imbalanced train</h3>
               <p>
                 Train is 959 positive / 287 negative. Val is balanced 155 / 155.
                 Stage 1 therefore balances loss across negative, pre-onset, and
@@ -333,17 +362,7 @@ export function getSlides(): Slide[] {
             Let <em>g</em> be the annotated onset and <em>ĝ</em> the prediction. Labels are integer seconds.
             A true positive requires a positive video and ĝ ∈ [g−1, g+30].
           </p>
-          <div className="corridor" aria-hidden="true">
-            <div className="corridor-band" />
-            <div className="corridor-axis" />
-            <div className="corridor-g" />
-            <span className="corridor-lab" style={{ left: "1rem", top: "0.45rem", color: "var(--onset)" }}>
-              g · annotated onset
-            </span>
-            <span className="corridor-lab" style={{ left: "1rem", bottom: "0.4rem" }}>0 s</span>
-            <span className="corridor-lab" style={{ left: "14%", bottom: "0.4rem", color: "var(--accept)" }}>g − 1 s</span>
-            <span className="corridor-lab" style={{ right: "1.2rem", bottom: "0.4rem", color: "var(--accept)" }}>g + 30 s</span>
-          </div>
+          <Corridor />
           <div className="cases" style={{ marginTop: "0.65rem" }}>
             <article className="case" style={{ background: "var(--accept)" }}>
               <div className="n">01 · TP</div>
@@ -478,11 +497,13 @@ export function getSlides(): Slide[] {
             <article className="box">
               <h3>Onset spike vs cumulative step</h3>
               <p>Onset target: a delta at g. Cumulative: stay on after g.</p>
+              <p className="caption" style={{ margin: "0.35rem 0 0" }}>onset spike</p>
               <div className="cells">
                 {Array.from({ length: 12 }, (_, i) => (
                   <div className={`cell ${i === 5 ? "on" : ""}`} key={`o${i}`} />
                 ))}
               </div>
+              <p className="caption" style={{ margin: 0 }}>cumulative step</p>
               <div className="cells">
                 {Array.from({ length: 12 }, (_, i) => (
                   <div className={`cell ${i >= 5 ? "cum" : ""}`} key={`c${i}`} />
@@ -614,6 +635,7 @@ export function getSlides(): Slide[] {
             probabilities and average window-level video probabilities. Median filter
             of kernel 3. Then decode. This is not streaming.
           </p>
+          <ScoreCurve />
           <div className="grid-4" style={{ marginTop: "0.65rem" }}>
             {[
               ["τempty", "0.20", "If the sequence never rises, emit no incident."],
@@ -648,6 +670,24 @@ export function getSlides(): Slide[] {
       node: (
         <>
           <Head kicker="05 · table II" title="Selected RGB-only configuration" />
+          <div className="knobs">
+            <div className="knob">
+              <div className="lbl">Backbone</div>
+              <div className="val">VideoMAE</div>
+            </div>
+            <div className="knob">
+              <div className="lbl">Windows</div>
+              <div className="val">12 / 6</div>
+            </div>
+            <div className="knob">
+              <div className="lbl">Recall floor</div>
+              <div className="val">0.90</div>
+            </div>
+            <div className="knob">
+              <div className="lbl">Selected seed</div>
+              <div className="val">2026</div>
+            </div>
+          </div>
           <div className="split">
             <table>
               <thead>
@@ -756,38 +796,19 @@ export function getSlides(): Slide[] {
       node: (
         <>
           <Head kicker="06 · tables V–VI" title="aid-eval selects RGB-only; the proxy ranking can lie" />
-          <div className="grid-2">
-            {FULL_EVAL.map((row) => (
-              <article className="box compact" key={row.variant}>
-                <h3>
-                  {row.variant}
-                  {row.selected ? " · selected" : ""} · seed {row.seed}
-                </h3>
-                <div className="bar-row">
-                  <span>Precision</span>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{ width: `${row.precision * 100}%`, background: "var(--clip)" }} />
-                  </div>
-                  <span>{row.precision.toFixed(4)}</span>
-                </div>
-                <div className="bar-row">
-                  <span>Recall</span>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{ width: `${row.recall * 100}%`, background: "var(--accept)" }} />
-                  </div>
-                  <span>{row.recall.toFixed(4)}</span>
-                </div>
-                <div className="bar-row">
-                  <span>F1</span>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{ width: `${row.f1 * 100}%`, background: "var(--onset)" }} />
-                  </div>
-                  <span>{row.f1.toFixed(4)}</span>
-                </div>
-              </article>
-            ))}
+          <div className="compare" style={{ marginBottom: "0.7rem" }}>
+            <article>
+              <div className="kicker" style={{ marginBottom: 0 }}>Selected · RGB-only · seed 2026</div>
+              <div className="val hot">0.7756</div>
+              <p>P 0.6643 · R 0.9324. Recall holds the floor; this is the deployable checkpoint.</p>
+            </article>
+            <article>
+              <div className="kicker" style={{ marginBottom: 0 }}>Motion fusion · seed 2026</div>
+              <div className="val">0.7192</div>
+              <p>P 0.6731 · R 0.7721. Slightly better precision, much worse recall on full eval.</p>
+            </article>
           </div>
-          <table style={{ marginTop: "0.7rem" }}>
+          <table>
             <thead>
               <tr>
                 <th>Variant</th>
@@ -799,7 +820,10 @@ export function getSlides(): Slide[] {
             </thead>
             <tbody>
               {PROXY_VS_FULL.map((row) => (
-                <tr key={`${row.variant}-${row.seed}`}>
+                <tr
+                  key={`${row.variant}-${row.seed}`}
+                  className={row.variant === "RGB-only" && row.seed === 2026 ? "sel" : undefined}
+                >
                   <td>{row.variant}</td>
                   <td>{row.seed}</td>
                   <td className="num">{row.train.toFixed(4)}</td>
@@ -828,7 +852,7 @@ export function getSlides(): Slide[] {
         <>
           <Head kicker="07–08" title="What the recipe is associated with, and what the numbers are not" />
           <div className="grid-3 compact">
-            <article className="box">
+            <article className="box fill-c">
               <h3>Associated factors</h3>
               <ul>
                 <li>Stage 1 + Stage 2 give clip and sequence signal.</li>
@@ -837,7 +861,7 @@ export function getSlides(): Slide[] {
                 <li>Recall-constrained thresholds match FN/FP asymmetry.</li>
               </ul>
             </article>
-            <article className="box">
+            <article className="box fill-d">
               <h3>Why cumulative can win</h3>
               <p>
                 Out-of-window positives are FPs; only missing predictions are FNs.
@@ -845,7 +869,7 @@ export function getSlides(): Slide[] {
                 delta. RGB Conv1D cumulative 0.7598 vs onset 0.6645 (loop, seed 2026).
               </p>
             </article>
-            <article className="box">
+            <article className="box fill-b">
               <h3>Warm-start: no claim</h3>
               <p>
                 Caches from adapted Stage 1 and from the unadapted pretrained encoder
@@ -877,7 +901,8 @@ export function getSlides(): Slide[] {
       node: (
         <>
           <Head kicker="09" title="Selected system, and how to read it" />
-          <div className="split">
+          <StageStrip />
+          <div className="split" style={{ marginTop: "0.85rem" }}>
             <div>
               <p className="lede">
                 VideoMAE clip encoder + cached dilated Conv1D head + cumulative
