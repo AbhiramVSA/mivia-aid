@@ -1,6 +1,10 @@
-# MIVIA-AID presentation
+<p align="center">
+  <img src="assets/mivia-aid-mark.png" alt="Video timeline with accident-onset marker" width="200" />
+</p>
 
-An interactive research deck about offline accident-onset timestamp estimation on MIVIA-AID. The work is by Adabala and Chakkaravarthy and uses VideoMAE with dilated temporal convolutions.
+<h1 align="center">MIVIA-AID presentation</h1>
+
+<p align="center">An interactive research deck about offline accident-onset timestamp estimation on MIVIA-AID. The work is by Adabala and Chakkaravarthy and uses VideoMAE with dilated temporal convolutions.</p>
 
 The companion [AID2026 research scaffold](https://github.com/AbhiramVSA/mivia-aid-dataset) contains the training and submission code.
 
